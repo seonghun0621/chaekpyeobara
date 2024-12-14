@@ -327,7 +327,8 @@ def chat_with_gpt(book_title, user_feedback):
     
     return response.choices[0].text.strip()
 
-api_key = st.secrets["open_api_key"]
+import openai
+api_key = st.secrets["general"]["open_api_key"]
 openai.api_key = api_key
     
 # 탭 3 - 알라딘 API와 ChatGPT 통합
