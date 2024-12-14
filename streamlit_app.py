@@ -137,6 +137,7 @@ if book_title:
         remaining_pages = total_pages
         remaining_days = target_days
 
+        # 읽기 목표 관리 (책을 다 읽을 때까지 반복)
         while remaining_pages > 0 and remaining_days > 0:
             # `key` 값에 고유한 값 사용
             pages_read_today = st.number_input(
@@ -159,4 +160,5 @@ if book_title:
                     st.write(f"남은 목표 일수는 {remaining_days}일이에요. 파이팅! 💪📚")
     else:
         st.write("목표 읽기 기간을 입력해 주세요!")
+
 
