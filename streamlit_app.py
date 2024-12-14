@@ -13,20 +13,6 @@ import re
 import json
 import openai
 from datetime import datetime
-
-from dotenv import load_dotenv
-import os
-
-# .env 파일 읽기
-load_dotenv()
-
-# 환경 변수에서 API Key 불러오기
-api_key = os.getenv("OPENAI_API_KEY")
-
-if not api_key:
-    st.error("API Key가 설정되지 않았습니다.")
-else:
-    st.write("API Key 로드 완료")
     
 # 알라딘 API 인증키
 TTB_KEY = "ttbtmdwn021442001"
@@ -341,6 +327,20 @@ def chat_with_gpt(book_title, user_feedback):
     
     return response.choices[0].text.strip()
 
+from dotenv import load_dotenv
+import os
+
+# .env 파일 읽기
+load_dotenv()
+
+# 환경 변수에서 API Key 불러오기
+api_key = os.getenv("OPENAI_API_KEY")
+
+if not api_key:
+    st.error("API Key가 설정되지 않았습니다.")
+else:
+    st.write("API Key 로드 완료")
+    
 # 탭 3 - 알라딘 API와 ChatGPT 통합
 with tab3:
     st.subheader("🤖 책 정보 검색 & ChatGPT와 대화")
