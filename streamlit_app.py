@@ -395,4 +395,26 @@ with tab4:
     user_gender = st.selectbox("성별을 선택하세요:", ["남성", "여성"])
     user_age = st.slider("나이를 입력하세요:", 10, 80, 30)
     user_region = st.text_input("지역을 입력하세요:")
+
+    #도서 추천
+    if st.button("도서 추천 받기"):
+    if user_gender and user_age and user_region:
+        st.write(f"입력 정보: 성별 - {user_gender}, 나이 - {user_age}, 지역 - {user_region}")
+        st.write("추천 도서를 가져오는 중입니다...")
+
+        # OpenAI API 예제: 추천 이유 생성
+        prompt = f"""
+        사용자가 입력한 정보:
+        - 성별: {user_gender}
+        - 나이: {user_age}세
+        - 지역: {user_region}
+        추천 도서를 생성하고, 각 도서 추천 이유를 설명해 주세요.
+        """
+        response = openai.Completion.create(
+            model="text-davinci-003",
+            prompt=prompt,
+            max_tokens=300
+        )
+        st.write("추천 도서 및 추천 이유:")
+        st.write(response["choices"][0]["text"])
     
