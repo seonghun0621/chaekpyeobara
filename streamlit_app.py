@@ -84,8 +84,8 @@ def recalculate_goal_dynamic(remaining_pages, pages_read_today, remaining_days):
     remaining_days -= 1
     
     return remaining_pages, new_daily_goal, remaining_days, f"남은 목표 일수는 {remaining_days}일이에요."
-
-# 목표 저장 함수
+    
+# 목표 저장하기
 def save_goal(book_title, target_days, daily_pages, remaining_pages):
     goal_data = {
         "book_title": book_title,
@@ -96,15 +96,17 @@ def save_goal(book_title, target_days, daily_pages, remaining_pages):
     }
     try:
         # 파일에 저장
-        existing_data = load_goals()
-        existing_data.append(goal_data)
-        with open("reading_goals.json", "w", encoding="utf-8") as file:
-            json.dump(existing_data, file, ensure_ascii=False, indent=4)
-        st.write("📂 목표가 성공적으로 저장되었습니다! 다음에 이 목표를 다시 확인할 수 있어요!")
+        with open("reading_goals.json", "a", encoding="utf-8") as file:
+            # 파일에 JSON 객체를 추가하는 대신, 여러 목표를 배열로 저장하도록 수정
+            existing_data = load_goals()
+            existing_data.append(goal_data)
+            with open("reading_goals.json", "w", encoding="utf-8") as write_file:
+                json.dump(existing_data, write_file, ensure_ascii=False, indent=4)
+            st.write("📂 목표가 성공적으로 저장되었습니다! 다음에 이 목표를 다시 확인할 수 있어요!")
     except Exception as e:
         st.write(f"저장 중 오류 발생: {e}")
-
-# 목표 불러오기 함수
+        
+# 목표 기록 불러오기
 def load_goals():
     try:
         with open("reading_goals.json", "r", encoding="utf-8") as file:
@@ -114,7 +116,7 @@ def load_goals():
         st.write(f"목표 불러오기 중 오류 발생: {e}")
         return []
 
-# 파일 초기화 함수 (파일이 없으면 빈 배열로 초기화)
+# 파일이 없을 때 초기화
 def initialize_file():
     try:
         with open("reading_goals.json", "r", encoding="utf-8") as file:
@@ -122,6 +124,17 @@ def initialize_file():
     except FileNotFoundError:
         with open("reading_goals.json", "w", encoding="utf-8") as file:
             json.dump([], file, ensure_ascii=False, indent=4)  # 빈 배열을 저장
+
+initialize_file()
+
+# 도전 과제 제공
+def give_challenge(book_title):
+    st.write(f"🎯 **{book_title}** 책을 다 읽은 것을 축하드려요! 🦦")
+    st.write("새로운 도전 과제를 제공합니다! 다음 책도 읽어보세요! 📚")
+    # 예시 도전 과제 제공
+    st.write("1. **두 번째 책**을 3일 안에 읽기!")
+    st.write("2. **읽은 책 기록 남기기** - 책의 감상문을 작성하고 공유해보세요!")
+    st.write("다음 도전은 무엇인가요? 다시 목표를 설정해볼까요? 🐾")
 
 # Streamlit 레이아웃 설정
 st.set_page_config(page_title="책펴바라 - 숲속 도서관", layout="wide")
@@ -145,9 +158,6 @@ st.markdown("""
         }
     </style>
     """, unsafe_allow_html=True)
-
-# 파일 초기화
-initialize_file()
 
 # 사용자 입력을 받기
 book_title = st.text_input("검색할 책 제목을 입력하세요:")
@@ -178,9 +188,6 @@ if book_title:
         remaining_pages = total_pages
         remaining_days = target_days
 
-        # 목표 저장
-        save_goal(book_info["title"], target_days, daily_pages, remaining_pages)
-
         # 읽기 목표 관리 (책을 다 읽을 때까지 반복)
         while remaining_pages > 0 and remaining_days > 0:
             # key 값에 동적 값을 사용하여 고유하게 설정
@@ -196,6 +203,8 @@ if book_title:
 
                 if remaining_pages == 0:
                     st.write("우와~! 🦦 책을 다 읽었어요! 느긋한 카피바라도 놀랐어요! 🎉")
+                    save_goal(book_info['title'], target_days, daily_pages, remaining_pages)
+                    give_challenge(book_info['title'])
                     break
                 elif remaining_pages > 0:
                     st.write(f"우웅~! 오늘 {pages_read_today}페이지를 읽었네요! 잘했어요! 🦫")
@@ -205,4 +214,7 @@ if book_title:
     else:
         st.write("목표 읽기 기간을 입력해 주세요!")
 
+    # 이전 목표 확인하기
+    st.write("📅 지난 목표 확인하기:")
+    goals = load_goals()
 
