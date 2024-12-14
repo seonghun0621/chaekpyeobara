@@ -7,7 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1uhzqdVLIgx-RNuF9vtIOqQr0crUY1g7W
 """
 
-import os
 import streamlit as st
 import requests
 import re
@@ -16,7 +15,7 @@ import openai
 from datetime import datetime
 
 # OpenAI 인증키 설정
-openai.api_key = os.environ.get("OPEN_API_KEY")  # 여기에 OpenAI 인증키를 넣으세요
+openai.api_key = st.secrets("OPEN_API_KEY")  # 여기에 OpenAI 인증키를 넣으세요
 
 
 # 알라딘 API 인증키
