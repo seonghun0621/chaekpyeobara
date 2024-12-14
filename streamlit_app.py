@@ -111,10 +111,13 @@ def load_goals():
     try:
         with open("reading_goals.json", "r", encoding="utf-8") as file:
             goals = json.load(file)  # json.load()를 사용하여 올바르게 JSON 형식을 읽기
-            return goals
+            if isinstance(goals, list):  # 반환 값이 list인지 확인
+                return goals
+            else:
+                return []  # 리스트가 아니면 빈 리스트 반환
     except Exception as e:
         st.write(f"목표 불러오기 중 오류 발생: {e}")
-        return []
+        return []  # 예외가 발생하면 빈 리스트 반환
 
 # 파일이 없을 때 초기화
 def initialize_file():
