@@ -201,14 +201,17 @@ with tab1:
                 st.write("---")
         else:
             st.write("저장된 목표가 없습니다.")
+
+# 목표 불러오기
+goals = load_goals()  # 여기에 목표를 불러오는 코드가 필요
 with tab2:
     st.subheader("📚 새 도전 과제 & 감상문 기록")
     
     # 감상문 작성 기능
     st.write("읽은 책에 대한 감상문을 작성하고 공유해보세요!")
     selected_goal_title = st.selectbox(
-        "감상문을 작성할 책을 선택하세요:", 
-        [goal['book_title'] for goal in goals] if goals else []
+    "감상문을 작성할 책을 선택하세요:", 
+    [goal['book_title'] for goal in goals] if goals else []
     )
     review_text = st.text_area("감상문을 여기에 작성하세요:", height=200)
     if st.button("감상문 저장하기"):
@@ -293,6 +296,41 @@ with tab2:
     except (FileNotFoundError, json.JSONDecodeError):
         st.write("저장된 도전 과제가 없습니다.")
 
+import openai
+
+# OpenAI 인증키 설정
+openai.api_key = "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"  # 여기에 OpenAI 인증키를 넣으세요
+
+# 알라딘 API 검색 함수 (예시로 간단히 작성)
+def search_book(book_title):
+    # 여기에 알라딘 API 호출 코드 추가 (예시로 간단한 응답 반환)
+    # 실제 API 호출을 구현하려면 해당 API의 문서를 참고하세요.
+    try:
+        # 예시: 책 정보를 반환 (API를 통해 실제 책 정보를 받아올 부분)
+        book_info = {
+            "title": book_title,
+            "author": "저자명",
+            "publisher": "출판사명",
+            "price": 20000,
+            "isbn": "978-1234567890",
+            "description": "책에 대한 간단한 설명"
+        }
+        return book_info
+    except Exception as e:
+        return {"error": f"책 정보를 가져오는 데 실패했습니다: {e}"}
+
+# ChatGPT와 대화하는 함수
+def chat_with_gpt(book_title, user_feedback):
+    prompt = f"책 제목: {book_title}\n감상문: {user_feedback}\nChatGPT에게 질문: 이 책에 대해 어떻게 생각하나요?"
+    
+    response = openai.Completion.create(
+        model="text-davinci-003",  # 또는 사용하고자 하는 모델
+        prompt=prompt,
+        max_tokens=100
+    )
+    
+    return response.choices[0].text.strip()
+
 # 탭 3 - 알라딘 API와 ChatGPT 통합
 with tab3:
     st.subheader("🤖 책 정보 검색 & ChatGPT와 대화")
@@ -335,6 +373,3 @@ with tab3:
 
             except Exception as e:
                 st.error(f"오류 발생: {e}")
-                
-
-
