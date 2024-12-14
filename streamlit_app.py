@@ -386,6 +386,77 @@ with tab3:
             except Exception as e:
                 st.error(f"오류 발생: {e}")
 
+#API 정보 Chroma DB에 저장
+def fetch_and_store_books(region, start_date, end_date):
+    url = "http://data4library.kr/api/loanItemSrchByLib"
+    params = {
+        "authKey": LIB_KEY,
+        "region": region,
+        "startDt": start_date,
+        "endDt": end_date,
+        "format": "json",
+        "pageSize": 100  # 한 번에 최대 100권 가져오기
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        if "docs" in data:
+            for book in data["docs"]:
+                title = book['bookname']
+                authors = book['authors']
+                gender = book.get("gender", "남성, 여성")  # API 데이터에서 추출 가능 시 사용
+                age = book.get("age", "10,20,30")  # 가정: API에서 나이대 정보를 제공
+                region = region  # 지역 코드
+                collection.add(
+                    documents=[{
+                        "title": title,
+                        "authors": authors,
+                        "gender": gender,
+                        "age": age,
+                        "region": region
+                    }],
+                    ids=[f"{title}_{region}"]
+                )
+            return True
+    return False
+
+# 책 추천 함수
+def get_recommended_books(gender, age, region, num_books=5):
+    query = f"{gender}, {age}세, {region}"  # 검색 조건
+    try:
+        # Chroma DB에서 조건에 맞는 데이터 검색
+        results = collection.query(
+            query_texts=[query],
+            n_results=50  # 넉넉히 검색해둔 뒤 랜덤 추출
+        )
+        books = results["documents"]
+        if len(books) > num_books:
+            books = random.sample(books, num_books)  # 랜덤으로 선택
+        return books
+    except Exception as e:
+        print(f"Error during query: {e}")
+        return []
+
+# 추천 이유 설명 함수
+def generate_recommendation_reason(books, user_info):
+    book_titles = [book["title"] for book in books]
+    prompt = f"""
+    사용자가 입력한 조건:
+    - 성별: {user_info['gender']}
+    - 나이: {user_info['age']}
+    - 지역: {user_info['region']}
+    
+    추천 도서 목록:
+    {', '.join(book_titles)}
+
+    각 도서를 추천한 이유를 설명해 주세요.
+    """
+    response = openai.Completion.create(
+        model="text-davinci-003",
+        prompt=prompt,
+        max_tokens=300
+    )
+    return response["choices"][0]["text"]
 
 # 탭 4 - 책 추천받기
 with tab4:
@@ -396,25 +467,23 @@ with tab4:
     user_age = st.slider("나이를 입력하세요:", 10, 80, 30)
     user_region = st.text_input("지역을 입력하세요:")
 
-    #도서 추천
-    if st.button("도서 추천 받기"):
-    if user_gender and user_age and user_region:
-        st.write(f"입력 정보: 성별 - {user_gender}, 나이 - {user_age}, 지역 - {user_region}")
-        st.write("추천 도서를 가져오는 중입니다...")
-
-        # OpenAI API 예제: 추천 이유 생성
-        prompt = f"""
-        사용자가 입력한 정보:
-        - 성별: {user_gender}
-        - 나이: {user_age}세
-        - 지역: {user_region}
-        추천 도서를 생성하고, 각 도서 추천 이유를 설명해 주세요.
-        """
-        response = openai.Completion.create(
-            model="text-davinci-003",
-            prompt=prompt,
-            max_tokens=300
-        )
-        st.write("추천 도서 및 추천 이유:")
-        st.write(response["choices"][0]["text"])
-    
+    # 도서 추천 버튼
+    if st.button("추천받기"):
+        with st.spinner("추천 도서를 검색 중입니다..."):
+            user_info = {
+                "gender": user_gender,
+                "age": user_age,
+                "region": user_region
+            }
+            books = get_recommended_books(user_gender, user_age, user_region)
+            if books:
+                st.subheader("추천 도서 목록:")
+                for book in books:
+                    st.write(f"**{book['title']}** - {book['authors']}")
+                
+                # 추천 이유 생성
+                reasons = generate_recommendation_reason(books, user_info)
+                st.subheader("추천 이유:")
+                st.write(reasons)
+            else:
+                st.warning("조건에 맞는 추천 도서를 찾지 못했습니다.")
