@@ -14,9 +14,8 @@ import json
 import openai
 from datetime import datetime
 
-# OpenAI 인증키 설정
-with open("key.txt", "r") as file:
-    openai.api_key = file.read().strip()
+# OpenAI API 키 (본인의 키로 교체)
+openai.api_key = "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"
 
 # 알라딘 API 인증키
 TTB_KEY = "ttbtmdwn021442001"
