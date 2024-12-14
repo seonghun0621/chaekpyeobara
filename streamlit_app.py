@@ -9,8 +9,11 @@ Original file is located at
 
 import streamlit as st
 import requests
+import openai
+import json
 import re
 from datetime import datetime
+
 
 # 알라딘 API 인증키 (여기에 자신의 TTBKey를 입력)
 TTB_KEY = "ttbtmdwn021442001"
@@ -141,3 +144,6 @@ if book_title:
                     st.write(f"남은 목표 일수는 {remaining_days}일이에요. 파이팅! 💪📚")
     else:
         st.write("목표 읽기 기간을 입력해 주세요!")
+
+
+
