@@ -22,6 +22,13 @@ TTB_KEY = "ttbtmdwn021442001"
 #도서관 정보나루 API 인증키
 LIB_KEY = "661a88b506497d2578c01548eb504b824b8fe475c0d9a08379b712caf9577067"
 
+# Chroma DB 설정
+chroma_client = chromadb.Client(Settings(
+    persist_directory="./chroma", # 데이터 저장 경로
+    chroma_db_impl="duckdb+parquet"
+))
+collection = chroma_client.get_or_create_collection("book_recommendations")
+
 # 책 검색 함수
 def search_book(book_title):
     search_url = "http://www.aladin.co.kr/ttb/api/ItemSearch.aspx"
@@ -378,9 +385,11 @@ with tab3:
 
             except Exception as e:
                 st.error(f"오류 발생: {e}")
+
+
 # 탭 4 - 책 추천받기
 with tab4:
-    st.subheader("🦫책펴바라가 추천해주는 책📖")
+    st.subheader("🦫 책펴바라에게 책 추천받기 📖")
 
     #사용자 입력
     user_gender = st.selectbox("성별을 선택하세요:", ["남성", "여성"])
