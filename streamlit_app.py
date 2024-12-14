@@ -14,8 +14,14 @@ import json
 import openai
 from datetime import datetime
 
-# Streamlit Secrets에서 API Key 불러오기
-api_key = st.secrets["openai"]["api_key"]
+from dotenv import load_dotenv
+import os
+
+# .env 파일 읽기
+load_dotenv()
+
+# 환경 변수에서 API Key 불러오기
+api_key = os.getenv("OPENAI_API_KEY")
 
 if not api_key:
     st.error("API Key가 설정되지 않았습니다.")
