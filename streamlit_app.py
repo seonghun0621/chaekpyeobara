@@ -13,7 +13,7 @@ import re
 import json
 from datetime import datetime
 
-# 알라딘 API 인증키 (여기에 자신의 TTBKey를 입력)
+# 알라딘 API 인증키
 TTB_KEY = "ttbtmdwn021442001"
 
 # 책 검색 함수
@@ -95,144 +95,245 @@ def save_goal(book_title, target_days, daily_pages, remaining_pages):
         "date_completed": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     try:
-        # 파일에 저장
         with open("reading_goals.json", "a", encoding="utf-8") as file:
-            # 파일에 JSON 객체를 추가하는 대신, 여러 목표를 배열로 저장하도록 수정
             existing_data = load_goals()
             existing_data.append(goal_data)
             with open("reading_goals.json", "w", encoding="utf-8") as write_file:
                 json.dump(existing_data, write_file, ensure_ascii=False, indent=4)
-            st.write("📂 목표가 성공적으로 저장되었습니다! 다음에 이 목표를 다시 확인할 수 있어요!")
+            st.write("📂 목표가 성공적으로 저장되었습니다!")
     except Exception as e:
         st.write(f"저장 중 오류 발생: {e}")
-        
-# 목표 기록 불러오기
+
 def load_goals():
     try:
         with open("reading_goals.json", "r", encoding="utf-8") as file:
-            goals = json.load(file)  # json.load()를 사용하여 올바르게 JSON 형식을 읽기
-            if isinstance(goals, list):  # 반환 값이 list인지 확인
+            goals = json.load(file)
+            if isinstance(goals, list):
                 return goals
             else:
-                return []  # 리스트가 아니면 빈 리스트 반환
+                return []
     except Exception as e:
         st.write(f"목표 불러오기 중 오류 발생: {e}")
-        return []  # 예외가 발생하면 빈 리스트 반환
+        return []
 
-# 파일이 없을 때 초기화
 def initialize_file():
     try:
         with open("reading_goals.json", "r", encoding="utf-8") as file:
-            pass  # 파일이 이미 존재하면 아무 작업도 하지 않음
+            pass
     except FileNotFoundError:
         with open("reading_goals.json", "w", encoding="utf-8") as file:
-            json.dump([], file, ensure_ascii=False, indent=4)  # 빈 배열을 저장
+            json.dump([], file, ensure_ascii=False, indent=4)
 
 initialize_file()
 
-# 도전 과제 제공
 def give_challenge(book_title):
     st.write(f"🎯 **{book_title}** 책을 다 읽은 것을 축하드려요! 🦦")
-    st.write("새로운 도전 과제를 제공합니다! 다음 책도 읽어보세요! 📚")
-    # 예시 도전 과제 제공
-    st.write("1. **두 번째 책**을 3일 안에 읽기!")
-    st.write("2. **읽은 책 기록 남기기** - 책의 감상문을 작성하고 공유해보세요!")
+    st.write("새로운 도전 과제를 제공합니다!")
     st.write("다음 도전은 무엇인가요? 다시 목표를 설정해볼까요? 🐾")
 
-# Streamlit 레이아웃 설정
 st.set_page_config(page_title="책펴바라 - 숲속 도서관", layout="wide")
 st.title("책펴바라 숲속 도서관에 오신 것을 환영합니다! 🦦📚")
 
-# 텍스트와 색상 설정
-st.markdown("""
-    <style>
-        body {
-            background-color: #aaf0d1;  # 연두색 배경
-            color: #87cefa;  # 하늘색 텍스트
-        }
-        .sidebar .sidebar-content {
-            background-color: #aaf0d1;
-        }
-        .stButton>button {
-            background-color: #87cefa;
-            color: white;
-            border-radius: 10px;
-            padding: 10px;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+tab1, tab2, tab3 = st.tabs(["책 검색 및 목표 설정", "독서 감상문 쓰기", "독서 감상 주고받기"])
 
-# 사용자 입력을 받기
-book_title = st.text_input("검색할 책 제목을 입력하세요:")
+with tab1:
+    book_title = st.text_input("검색할 책 제목을 입력하세요:")
 
-if book_title:
-    book_info = search_book(book_title)
+    if book_title:
+        book_info = search_book(book_title)
 
-    if "error" not in book_info:
-        st.write(f"우웅~ 🦦 제가 찾아봤는데요!")
-        st.write(f"책 이름은 **'{book_info['title']}'**이고요,")
-        st.write(f"지은이는 **{book_info['author']}**님, 출판사는 **{book_info['publisher']}**랍니다! 🐾")
-        st.write(f"가격은 **{book_info['price']}원**이에요! 그리고 총 **{book_info['page_count']}페이지**나 되네요. 대단한 책이에요! 📚\n")
-    else:
-        st.write(book_info["error"])
+        if "error" not in book_info:
+            st.write(f"책 이름: **'{book_info['title']}'**")
+            st.write(f"지은이: **{book_info['author']}**")
+            st.write(f"출판사: **{book_info['publisher']}**")
+            st.write(f"가격: **{book_info['price']}원**")
+            st.write(f"쪽수: **{book_info['page_count']}쪽**")
+        else:
+            st.write(book_info["error"])
 
-    target_days_input = st.text_input("\n목표 읽기 기간(일)을 입력해주세요:")
-    if target_days_input:
-        target_days = int(re.sub(r'\D', '', target_days_input))
-        daily_pages, remaining_pages = calculate_daily_pages(int(book_info["page_count"]), target_days)
+        target_days_input = st.text_input("\n목표 읽기 기간(일)을 입력해주세요:")
+        if target_days_input:
+            target_days = int(re.sub(r'\D', '', target_days_input))
+            daily_pages, remaining_pages = calculate_daily_pages(int(book_info["page_count"]), target_days)
 
-        st.write(f"하루에 **{daily_pages}페이지**씩 읽으면 딱 맞을 거예요. (마지막 날은 {remaining_pages}페이지가 남을지도요!) 🦫")
-        if remaining_pages > 0:
-            st.write(f"마지막 날 추가로 읽어야 할 페이지: **{remaining_pages}쪽**")
-        st.write("오늘부터 시작해볼까요? 제가 응원할게요, 휘리릭~! 💨🐾")
+            st.write(f"하루에 **{daily_pages}쪽**씩 읽으면 됩니다.")
+            if remaining_pages > 0:
+                st.write(f"마지막 날 추가로 읽어야 할 페이지: **{remaining_pages}쪽**")
+            st.write("오늘부터 시작해볼까요?")
 
-        # 목표 관리
-        total_pages = int(book_info["page_count"])
-        remaining_pages = total_pages
-        remaining_days = target_days
+            total_pages = int(book_info["page_count"])
+            remaining_pages = total_pages
+            remaining_days = target_days
 
-        # 목표 설정 및 관리
-        while remaining_pages > 0 and remaining_days > 0:
-            pages_read_today = st.number_input(
-                f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", 
-                min_value=0, 
-                max_value=remaining_pages,
-                key=f"pages_read_{remaining_pages}_{remaining_days}_{book_info['title']}"
-            )
+            while remaining_pages > 0 and remaining_days > 0:
+                pages_read_today = st.number_input(
+                    f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", 
+                    min_value=0, 
+                    max_value=remaining_pages,
+                    key=f"pages_read_{remaining_pages}_{remaining_days}"
+                )
 
-            if pages_read_today:
-                remaining_pages, new_daily_goal, remaining_days, status = recalculate_goal_dynamic(remaining_pages, pages_read_today, remaining_days)
+                if pages_read_today:
+                    remaining_pages, new_daily_goal, remaining_days, status = recalculate_goal_dynamic(remaining_pages, pages_read_today, remaining_days)
 
-                if remaining_pages == 0:
-                    st.write("우와~! 🦦 책을 다 읽었어요! 느긋한 카피바라도 놀랐어요! 🎉")
-                    save_goal(book_info['title'], target_days, daily_pages, remaining_pages)
-                    give_challenge(book_info['title'])
-                    break
-                elif remaining_pages > 0:
-                    st.write(f"우웅~! 오늘 {pages_read_today}페이지를 읽었네요! 잘했어요! 🦫")
-                    st.write(f"남은 페이지는 {remaining_pages}페이지에요.")
-                    st.write(f"내일부터는 하루에 {new_daily_goal}페이지씩 읽으면 돼요!")
-                    st.write(f"남은 목표 일수는 {remaining_days}일이에요. 파이팅! 💪📚")
-    else:
-        st.write("목표 읽기 기간을 입력해 주세요!")
+                    if remaining_pages == 0:
+                        st.write("우와~! 🦦 책을 다 읽었어요! 🎉")
+                        save_goal(book_info['title'], target_days, daily_pages, remaining_pages)
+                        give_challenge(book_info['title'])
+                        break
+                    else:
+                        st.write(f"남은 페이지: {remaining_pages}쪽")
+                        st.write(f"내일부터 하루 목표는 {new_daily_goal}쪽입니다.")
+                        st.write(f"남은 목표 일수: {remaining_days}일")
+        else:
+            st.write("목표 읽기 기간을 입력해 주세요!")
 
-    # 지난 목표 확인하기
-    st.write("📅 지난 목표 확인하기:")
+        st.write("📅 지난 목표 확인하기:")
+        goals = load_goals()
 
-    goals = load_goals()  # 목표 목록 불러오기
+        if goals:
+            for goal in goals:
+                st.write(f"📖 책 제목: {goal['book_title']}")
+                st.write(f"📅 목표 기간: {goal['target_days']}일")
+                st.write(f"📘 하루 목표 페이지: {goal['daily_pages']}페이지")
+                st.write(f"📚 남은 페이지: {goal['remaining_pages']}페이지")
+                st.write(f"✅ 완료일: {goal['date_completed']}")
+                st.write("---")
+        else:
+            st.write("저장된 목표가 없습니다.")
+with tab2:
+    st.subheader("📚 새 도전 과제 & 감상문 기록")
+    
+    # 감상문 작성 기능
+    st.write("읽은 책에 대한 감상문을 작성하고 공유해보세요!")
+    selected_goal_title = st.selectbox(
+        "감상문을 작성할 책을 선택하세요:", 
+        [goal['book_title'] for goal in goals] if goals else []
+    )
+    review_text = st.text_area("감상문을 여기에 작성하세요:", height=200)
+    if st.button("감상문 저장하기"):
+        if selected_goal_title and review_text.strip():
+            try:
+                # 감상문 저장
+                reviews_file = "reading_reviews.json"
+                try:
+                    with open(reviews_file, "r", encoding="utf-8") as file:
+                        reviews = json.load(file)
+                except (FileNotFoundError, json.JSONDecodeError):
+                    reviews = []
+                
+                reviews.append({
+                    "book_title": selected_goal_title,
+                    "review": review_text,
+                    "date_written": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+                with open(reviews_file, "w", encoding="utf-8") as file:
+                    json.dump(reviews, file, ensure_ascii=False, indent=4)
+                st.success("📖 감상문이 저장되었습니다! 잘했어요! 🦦")
+            except Exception as e:
+                st.error(f"감상문 저장 중 오류가 발생했습니다: {e}")
+        else:
+            st.warning("책 제목과 감상문을 입력해 주세요!")
 
-    if goals:
-        for goal in goals:
-            st.write(f"📖 책 제목: {goal['book_title']}")
-            st.write(f"📅 목표 기간: {goal['target_days']}일")
-            st.write(f"📘 하루 목표 페이지: {goal['daily_pages']}페이지")
-            st.write(f"📚 남은 페이지: {goal['remaining_pages']}페이지")
-            st.write(f"✅ 완료일: {goal['date_completed']}")
-            st.write("---")  # 각 목표마다 구분선을 추가
-    else:
-        st.write("저장된 목표가 없습니다. 목표를 설정하고 읽어보세요!")
+    # 저장된 감상문 불러오기
+    st.write("📖 내가 작성한 감상문:")
+    try:
+        with open("reading_reviews.json", "r", encoding="utf-8") as file:
+            reviews = json.load(file)
+        if reviews:
+            for review in reviews:
+                st.write(f"📚 책 제목: {review['book_title']}")
+                st.write(f"📝 감상문: {review['review']}")
+                st.write(f"📅 작성일: {review['date_written']}")
+                st.write("---")
+        else:
+            st.write("작성된 감상문이 없습니다.")
+    except (FileNotFoundError, json.JSONDecodeError):
+        st.write("작성된 감상문이 없습니다.")
 
-    # 이전 목표 확인하기
-    st.write("📅 지난 목표 확인하기:")
-    goals = load_goals()
+    # 새로운 도전 과제 제공
+    st.write("🎯 새로운 도전 과제")
+    st.write("읽은 책을 바탕으로 새로운 목표를 설정해보세요!")
+    new_challenge_title = st.text_input("새로운 도전 과제를 입력하세요:")
+    challenge_deadline = st.date_input("목표 마감일을 설정하세요:")
+    if st.button("도전 과제 저장하기"):
+        try:
+            # 도전 과제 저장
+            challenges_file = "reading_challenges.json"
+            try:
+                with open(challenges_file, "r", encoding="utf-8") as file:
+                    challenges = json.load(file)
+            except (FileNotFoundError, json.JSONDecodeError):
+                challenges = []
+            
+            challenges.append({
+                "challenge": new_challenge_title,
+                "deadline": challenge_deadline.strftime("%Y-%m-%d"),
+                "date_created": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+            with open(challenges_file, "w", encoding="utf-8") as file:
+                json.dump(challenges, file, ensure_ascii=False, indent=4)
+            st.success("🎯 도전 과제가 저장되었습니다!")
+        except Exception as e:
+            st.error(f"도전 과제 저장 중 오류가 발생했습니다: {e}")
+
+    # 저장된 도전 과제 불러오기
+    st.write("📌 저장된 도전 과제:")
+    try:
+        with open("reading_challenges.json", "r", encoding="utf-8") as file:
+            challenges = json.load(file)
+        if challenges:
+            for challenge in challenges:
+                st.write(f"🔖 도전 과제: {challenge['challenge']}")
+                st.write(f"⏳ 마감일: {challenge['deadline']}")
+                st.write(f"📅 생성일: {challenge['date_created']}")
+                st.write("---")
+        else:
+            st.write("저장된 도전 과제가 없습니다.")
+    except (FileNotFoundError, json.JSONDecodeError):
+        st.write("저장된 도전 과제가 없습니다.")
+
+# 탭 3 - 알라딘 API와 ChatGPT 통합
+with tab3:
+    st.subheader("🤖 책 정보 검색 & ChatGPT와 대화")
+
+    # 사용자 입력
+    book_title = st.text_input("📚 책 제목을 입력하세요:")
+    user_feedback = st.text_area("✍️ 이 책에 대한 감상을 입력하세요:")
+
+    if st.button("🔍 책 검색 및 대화 시작"):
+        if book_title.strip() == "":
+            st.warning("책 제목을 입력해주세요!")
+        elif user_feedback.strip() == "":
+            st.warning("책에 대한 감상을 입력해주세요!")
+        else:
+            try:
+                # 알라딘 API를 통해 책 정보 가져오기
+                book_info = search_book(book_title)
+
+                if "error" in book_info:
+                    st.error(book_info["error"])
+                else:
+                    # 책 정보 출력
+                    st.write("📖 **책 정보**")
+                    st.write(f"- **제목:** {book_info['title']}")
+                    st.write(f"- **저자:** {book_info['author']}")
+                    st.write(f"- **출판사:** {book_info['publisher']}")
+                    st.write(f"- **가격:** {book_info['price']}원")
+                    st.write(f"- **ISBN:** {book_info['isbn']}")
+                    st.write(f"- **줄거리:** {book_info['description']}")
+
+                    # JSON 파일 저장
+                    with open("book_info.json", "w", encoding="utf-8") as file:
+                        json.dump(book_info, file, ensure_ascii=False, indent=4)
+                    st.success("📂 책 정보를 'book_info.json'에 저장했습니다!")
+
+                    # ChatGPT와 대화 시작
+                    gpt_response = chat_with_gpt(book_title, user_feedback)
+                    st.write("🤖 **ChatGPT의 대답**")
+                    st.write(gpt_response)
+
+            except Exception as e:
+                st.error(f"오류 발생: {e}")
+
 
