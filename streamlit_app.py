@@ -11,7 +11,12 @@ import streamlit as st
 import requests
 import re
 import json
+import openai
 from datetime import datetime
+
+# OpenAI 인증키 설정
+openai.api_key = "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"  # 여기에 OpenAI 인증키를 넣으세요
+
 
 # 알라딘 API 인증키
 TTB_KEY = "ttbtmdwn021442001"
@@ -295,11 +300,6 @@ with tab2:
             st.write("저장된 도전 과제가 없습니다.")
     except (FileNotFoundError, json.JSONDecodeError):
         st.write("저장된 도전 과제가 없습니다.")
-
-import openai
-
-# OpenAI 인증키 설정
-openai.api_key = "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"  # 여기에 OpenAI 인증키를 넣으세요
 
 # 알라딘 API 검색 함수 (예시로 간단히 작성)
 def search_book(book_title):
