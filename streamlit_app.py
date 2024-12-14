@@ -327,14 +327,20 @@ def chat_with_gpt(book_title, user_feedback):
     
     return response.choices[0].text.strip()
 
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
-# .env 파일 읽기
+# .env 파일 로드
 load_dotenv()
 
-# 환경 변수에서 API Key 불러오기
+# API 키 가져오기
 api_key = os.getenv("OPENAI_API_KEY")
+
+if api_key is None:
+    raise ValueError("OPENAI_API_KEY를 환경 변수에서 찾을 수 없습니다!")
+
+# OpenAI API 키 설정
+openai.api_key = api_key
     
 # 탭 3 - 알라딘 API와 ChatGPT 통합
 with tab3:
