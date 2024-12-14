@@ -74,6 +74,17 @@ def calculate_daily_pages(total_pages, target_days):
     except ZeroDivisionError:
         return 0, 0
 
+# 목표를 재조정하는 함수
+def recalculate_goal_dynamic(remaining_pages, pages_read_today, remaining_days):
+    remaining_pages -= pages_read_today
+    if remaining_pages <= 0:
+        return remaining_pages, 0, 0, "책을 다 읽었어요!"
+    
+    new_daily_goal = remaining_pages // remaining_days
+    remaining_days -= 1
+    
+    return remaining_pages, new_daily_goal, remaining_days, f"남은 목표 일수는 {remaining_days}일이에요."
+
 # Streamlit 레이아웃 설정
 st.set_page_config(page_title="책펴바라 - 숲속 도서관", layout="wide")
 st.title("책펴바라 숲속 도서관에 오신 것을 환영합니다! 🦦📚")
@@ -114,7 +125,7 @@ if book_title:
     target_days_input = st.text_input("\n목표 읽기 기간(일)을 입력해주세요:")
     if target_days_input:
         target_days = int(re.sub(r'\D', '', target_days_input))
-        daily_pages, remaining_pages = calculate_daily_pages(book_info['page_count'], target_days)
+        daily_pages, remaining_pages = calculate_daily_pages(int(book_info["page_count"]), target_days)
 
         st.write(f"하루에 **{daily_pages}페이지**씩 읽으면 딱 맞을 거예요. (마지막 날은 {remaining_pages}페이지가 남을지도요!) 🦫")
         if remaining_pages > 0:
@@ -122,14 +133,20 @@ if book_title:
         st.write("오늘부터 시작해볼까요? 제가 응원할게요, 휘리릭~! 💨🐾")
 
         # 목표 관리
-        total_pages = book_info['page_count']
+        total_pages = int(book_info["page_count"])
         remaining_pages = total_pages
         remaining_days = target_days
 
         while remaining_pages > 0 and remaining_days > 0:
-            pages_read_today = st.number_input(f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", min_value=0, max_value=remaining_pages)
+            # 위젯에 key 값을 추가하여 중복 방지
+            pages_read_today = st.number_input(
+                f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", 
+                min_value=0, 
+                max_value=remaining_pages,
+                key=f"pages_read_{remaining_days}"  # 고유한 key를 추가
+            )
+
             if pages_read_today:
-                remaining_pages -= pages_read_today
                 remaining_pages, new_daily_goal, remaining_days, status = recalculate_goal_dynamic(remaining_pages, pages_read_today, remaining_days)
 
                 if remaining_pages == 0:
