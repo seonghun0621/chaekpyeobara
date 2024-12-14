@@ -9,8 +9,6 @@ Original file is located at
 
 import streamlit as st
 import requests
-import openai
-import json
 import re
 from datetime import datetime
 
