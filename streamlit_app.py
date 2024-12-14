@@ -335,11 +335,6 @@ load_dotenv()
 
 # 환경 변수에서 API Key 불러오기
 api_key = os.getenv("OPENAI_API_KEY")
-
-if not api_key:
-    st.error("API Key가 설정되지 않았습니다.")
-else:
-    st.write("API Key 로드 완료")
     
 # 탭 3 - 알라딘 API와 ChatGPT 통합
 with tab3:
