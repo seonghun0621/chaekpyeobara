@@ -12,6 +12,8 @@ import requests
 import re
 import json
 import openai
+import chromadb
+from chromadb.config import Settings
 from datetime import datetime
     
 # 알라딘 API 인증키
@@ -378,4 +380,10 @@ with tab3:
                 st.error(f"오류 발생: {e}")
 # 탭 4 - 책 추천받기
 with tab4:
+    st.subheader("🦫책펴바라가 추천해주는 책📖")
+
+    #사용자 입력
+    user_gender = st.selectbox("성별을 선택하세요:", ["남성", "여성"])
+    user_age = st.slider("나이를 입력하세요:", 10, 80, 30)
+    user_region = st.text_input("지역을 입력하세요:")
     
