@@ -10,8 +10,8 @@ Original file is located at
 import streamlit as st
 import requests
 import re
+import json
 from datetime import datetime
-
 
 # 알라딘 API 인증키 (여기에 자신의 TTBKey를 입력)
 TTB_KEY = "ttbtmdwn021442001"
@@ -85,6 +85,43 @@ def recalculate_goal_dynamic(remaining_pages, pages_read_today, remaining_days):
     
     return remaining_pages, new_daily_goal, remaining_days, f"남은 목표 일수는 {remaining_days}일이에요."
 
+# 목표 정보 저장 함수
+def save_goal(book_title, target_days, daily_pages, remaining_pages):
+    goal_data = {
+        "book_title": book_title,
+        "target_days": target_days,
+        "daily_pages": daily_pages,
+        "remaining_pages": remaining_pages,
+        "date_completed": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    try:
+        # 파일에 저장
+        with open("reading_goals.json", "a", encoding="utf-8") as file:
+            json.dump(goal_data, file, ensure_ascii=False, indent=4)
+            file.write("\n")
+        st.write("📂 목표가 성공적으로 저장되었습니다! 다음에 이 목표를 다시 확인할 수 있어요!")
+    except Exception as e:
+        st.write(f"저장 중 오류 발생: {e}")
+
+# 목표 기록 불러오기
+def load_goals():
+    try:
+        with open("reading_goals.json", "r", encoding="utf-8") as file:
+            goals = file.readlines()
+            return [json.loads(goal) for goal in goals]
+    except Exception as e:
+        st.write(f"목표 불러오기 중 오류 발생: {e}")
+        return []
+
+# 도전 과제 제공
+def give_challenge(book_title):
+    st.write(f"🎯 **{book_title}** 책을 다 읽은 것을 축하드려요! 🦦")
+    st.write("새로운 도전 과제를 제공합니다! 다음 책도 읽어보세요! 📚")
+    # 예시 도전 과제 제공
+    st.write("1. **두 번째 책**을 3일 안에 읽기!")
+    st.write("2. **읽은 책 기록 남기기** - 책의 감상문을 작성하고 공유해보세요!")
+    st.write("다음 도전은 무엇인가요? 다시 목표를 설정해볼까요? 🐾")
+
 # Streamlit 레이아웃 설정
 st.set_page_config(page_title="책펴바라 - 숲속 도서관", layout="wide")
 st.title("책펴바라 숲속 도서관에 오신 것을 환영합니다! 🦦📚")
@@ -152,6 +189,8 @@ if book_title:
 
                 if remaining_pages == 0:
                     st.write("우와~! 🦦 책을 다 읽었어요! 느긋한 카피바라도 놀랐어요! 🎉")
+                    save_goal(book_info['title'], target_days, daily_pages, remaining_pages)
+                    give_challenge(book_info['title'])
                     break
                 elif remaining_pages > 0:
                     st.write(f"우웅~! 오늘 {pages_read_today}페이지를 읽었네요! 잘했어요! 🦫")
@@ -160,4 +199,9 @@ if book_title:
                     st.write(f"남은 목표 일수는 {remaining_days}일이에요. 파이팅! 💪📚")
     else:
         st.write("목표 읽기 기간을 입력해 주세요!")
+
+    # 이전 목표 확인하기
+    st.write("📅 지난 목표 확인하기:")
+    goals = load_goals()
+
 
