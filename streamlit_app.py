@@ -17,6 +17,9 @@ from datetime import datetime
 # 알라딘 API 인증키
 TTB_KEY = "ttbtmdwn021442001"
 
+#도서관 정보나루 API 인증키
+LIB_KEY = "661a88b506497d2578c01548eb504b824b8fe475c0d9a08379b712caf9577067"
+
 # 책 검색 함수
 def search_book(book_title):
     search_url = "http://www.aladin.co.kr/ttb/api/ItemSearch.aspx"
@@ -135,7 +138,7 @@ def give_challenge(book_title):
 st.set_page_config(page_title="책펴바라 - 숲속 도서관", layout="wide")
 st.title("책펴바라 숲속 도서관에 오신 것을 환영합니다! 🦦📚")
 
-tab1, tab2, tab3 = st.tabs(["책 검색 및 목표 설정", "독서 감상문 쓰기", "독서 감상 주고받기"])
+tab1, tab2, tab3, tab4 = st.tabs(["책 검색 및 목표 설정", "독서 감상문 쓰기", "독서 감상 주고받기", "책 추천받기"])
 
 with tab1:
     book_title = st.text_input("검색할 책 제목을 입력하세요:")
@@ -373,3 +376,6 @@ with tab3:
 
             except Exception as e:
                 st.error(f"오류 발생: {e}")
+# 탭 4 - 책 추천받기
+with tab4:
+    
