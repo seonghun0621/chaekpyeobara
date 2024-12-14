@@ -138,12 +138,12 @@ if book_title:
         remaining_days = target_days
 
         while remaining_pages > 0 and remaining_days > 0:
-            # 위젯에 key 값을 추가하여 중복 방지
+            # `key` 값에 고유한 값 사용
             pages_read_today = st.number_input(
                 f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", 
                 min_value=0, 
                 max_value=remaining_pages,
-                key=f"pages_read_{remaining_days}"  # 고유한 key를 추가
+                key=f"pages_read_{remaining_pages}_{remaining_days}"  # 고유한 key를 추가
             )
 
             if pages_read_today:
@@ -159,6 +159,4 @@ if book_title:
                     st.write(f"남은 목표 일수는 {remaining_days}일이에요. 파이팅! 💪📚")
     else:
         st.write("목표 읽기 기간을 입력해 주세요!")
-
-
 
