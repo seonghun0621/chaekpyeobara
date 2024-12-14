@@ -191,14 +191,13 @@ if book_title:
         remaining_pages = total_pages
         remaining_days = target_days
 
-        # 읽기 목표 관리 (책을 다 읽을 때까지 반복)
+        # 목표 설정 및 관리
         while remaining_pages > 0 and remaining_days > 0:
-            # key 값에 동적 값을 사용하여 고유하게 설정
             pages_read_today = st.number_input(
                 f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", 
                 min_value=0, 
                 max_value=remaining_pages,
-                key=f"pages_read_{remaining_pages}_{remaining_days}_{book_info['title']}"  # 고유한 key를 추가
+                key=f"pages_read_{remaining_pages}_{remaining_days}_{book_info['title']}"
             )
 
             if pages_read_today:
@@ -216,6 +215,22 @@ if book_title:
                     st.write(f"남은 목표 일수는 {remaining_days}일이에요. 파이팅! 💪📚")
     else:
         st.write("목표 읽기 기간을 입력해 주세요!")
+
+    # 지난 목표 확인하기
+    st.write("📅 지난 목표 확인하기:")
+
+    goals = load_goals()  # 목표 목록 불러오기
+
+    if goals:
+        for goal in goals:
+            st.write(f"📖 책 제목: {goal['book_title']}")
+            st.write(f"📅 목표 기간: {goal['target_days']}일")
+            st.write(f"📘 하루 목표 페이지: {goal['daily_pages']}페이지")
+            st.write(f"📚 남은 페이지: {goal['remaining_pages']}페이지")
+            st.write(f"✅ 완료일: {goal['date_completed']}")
+            st.write("---")  # 각 목표마다 구분선을 추가
+    else:
+        st.write("저장된 목표가 없습니다. 목표를 설정하고 읽어보세요!")
 
     # 이전 목표 확인하기
     st.write("📅 지난 목표 확인하기:")
