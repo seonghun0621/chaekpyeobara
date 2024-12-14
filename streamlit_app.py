@@ -7,23 +7,137 @@ Original file is located at
     https://colab.research.google.com/drive/1uhzqdVLIgx-RNuF9vtIOqQr0crUY1g7W
 """
 
-# Streamlit 앱 파일 저장
-streamlit_code = """
 import streamlit as st
+import requests
+import re
+from datetime import datetime
 
-# 앱 제목
-st.title("📚 Chaekpyeobara")
+# 알라딘 API 인증키 (여기에 자신의 TTBKey를 입력)
+TTB_KEY = "ttbtmdwn021442001"
 
-# 사용자 입력 받기
-book_title = st.text_input("책 제목을 입력하세요:")
-user_feedback = st.text_area("책에 대한 감상을 입력하세요:")
+# 책 검색 함수
+def search_book(book_title):
+    search_url = "http://www.aladin.co.kr/ttb/api/ItemSearch.aspx"
+    params = {
+        "ttbkey": TTB_KEY,
+        "Query": book_title,
+        "QueryType": "Title",
+        "MaxResults": 1,
+        "SearchTarget": "Book",
+        "output": "js",
+        "Version": "20131101"
+    }
+    response = requests.get(search_url, params=params)
+    data = response.json()
 
-# 입력 처리
-if st.button("감상 공유"):
-    st.write(f"**'{book_title}'에 대한 감상:**")
-    st.write(user_feedback)
-    st.success("감상이 성공적으로 저장되었습니다!")
-"""
-# 파일로 저장
-with open("streamlit_app.py", "w") as f:
-    f.write(streamlit_code)
+    if "item" in data and len(data["item"]) > 0:
+        book = data["item"][0]
+        book_info = {
+            "title": book.get("title", "제목 정보 없음"),
+            "author": book.get("author", "저자 정보 없음"),
+            "publisher": book.get("publisher", "출판사 정보 없음"),
+            "price": book.get("priceStandard", "가격 정보 없음"),
+            "isbn": book.get("isbn13", None)
+        }
+
+        if book_info["isbn"]:
+            lookup_url = "http://www.aladin.co.kr/ttb/api/ItemLookUp.aspx"
+            lookup_params = {
+                "ttbkey": TTB_KEY,
+                "itemIdType": "ISBN",
+                "ItemId": book_info["isbn"],
+                "output": "js",
+                "Version": "20131101"
+            }
+            lookup_response = requests.get(lookup_url, params=lookup_params)
+            lookup_data = lookup_response.json()
+
+            if "item" in lookup_data and len(lookup_data["item"]) > 0:
+                details = lookup_data["item"][0]
+                book_info["page_count"] = details.get("subInfo", {}).get("itemPage", "쪽수 정보 없음")
+            else:
+                book_info["page_count"] = "쪽수 정보 없음"
+        else:
+            book_info["page_count"] = "쪽수 정보 없음"
+
+        return book_info
+    else:
+        return {"error": "책 정보를 찾을 수 없습니다. 다시 시도해주세요."}
+
+# 목표 읽기 계획 생성 함수
+def calculate_daily_pages(total_pages, target_days):
+    try:
+        daily_pages = total_pages // target_days
+        remaining_pages = total_pages % target_days
+        return daily_pages, remaining_pages
+    except ZeroDivisionError:
+        return 0, 0
+
+# Streamlit 레이아웃 설정
+st.set_page_config(page_title="책펴바라 - 숲속 도서관", layout="wide")
+st.title("책펴바라 숲속 도서관에 오신 것을 환영합니다! 🦦📚")
+
+# 텍스트와 색상 설정
+st.markdown("""
+    <style>
+        body {
+            background-color: #aaf0d1;  # 연두색 배경
+            color: #87cefa;  # 하늘색 텍스트
+        }
+        .sidebar .sidebar-content {
+            background-color: #aaf0d1;
+        }
+        .stButton>button {
+            background-color: #87cefa;
+            color: white;
+            border-radius: 10px;
+            padding: 10px;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# 사용자 입력을 받기
+book_title = st.text_input("검색할 책 제목을 입력하세요:")
+
+if book_title:
+    book_info = search_book(book_title)
+
+    if "error" not in book_info:
+        st.write(f"우웅~ 🦦 제가 찾아봤는데요!")
+        st.write(f"책 이름은 **'{book_info['title']}'**이고요,")
+        st.write(f"지은이는 **{book_info['author']}**님, 출판사는 **{book_info['publisher']}**랍니다! 🐾")
+        st.write(f"가격은 **{book_info['price']}원**이에요! 그리고 총 **{book_info['page_count']}페이지**나 되네요. 대단한 책이에요! 📚\n")
+    else:
+        st.write(book_info["error"])
+
+    target_days_input = st.text_input("\n목표 읽기 기간(일)을 입력해주세요:")
+    if target_days_input:
+        target_days = int(re.sub(r'\D', '', target_days_input))
+        daily_pages, remaining_pages = calculate_daily_pages(book_info['page_count'], target_days)
+
+        st.write(f"하루에 **{daily_pages}페이지**씩 읽으면 딱 맞을 거예요. (마지막 날은 {remaining_pages}페이지가 남을지도요!) 🦫")
+        if remaining_pages > 0:
+            st.write(f"마지막 날 추가로 읽어야 할 페이지: **{remaining_pages}쪽**")
+        st.write("오늘부터 시작해볼까요? 제가 응원할게요, 휘리릭~! 💨🐾")
+
+        # 목표 관리
+        total_pages = book_info['page_count']
+        remaining_pages = total_pages
+        remaining_days = target_days
+
+        while remaining_pages > 0 and remaining_days > 0:
+            pages_read_today = st.number_input(f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", min_value=0, max_value=remaining_pages)
+            if pages_read_today:
+                remaining_pages -= pages_read_today
+                remaining_pages, new_daily_goal, remaining_days, status = recalculate_goal_dynamic(remaining_pages, pages_read_today, remaining_days)
+
+                if remaining_pages == 0:
+                    st.write("우와~! 🦦 책을 다 읽었어요! 느긋한 카피바라도 놀랐어요! 🎉")
+                    break
+                elif remaining_pages > 0:
+                    st.write(f"우웅~! 오늘 {pages_read_today}페이지를 읽었네요! 잘했어요! 🦫")
+                    st.write(f"남은 페이지는 {remaining_pages}페이지에요.")
+                    st.write(f"내일부터는 하루에 {new_daily_goal}페이지씩 읽으면 돼요!")
+                    st.write(f"남은 목표 일수는 {remaining_days}일이에요. 파이팅! 💪📚")
+    else:
+        st.write("목표 읽기 기간을 입력해 주세요!")
