@@ -428,8 +428,6 @@ def fetch_books(api_key, gender, age, region, major_topic):
         
         # `docs` 리스트에서 `doc` 키 데이터를 추출
         books = [item["doc"] for item in docs if "doc" in item]
-        
-        st.write("추출된 도서 데이터:", books)  # 디버깅용 데이터 출력
         return books
     else:
         st.error(f"API 호출 실패: {response.status_code}")
