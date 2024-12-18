@@ -485,8 +485,10 @@ with tab4:
             if selected_books:
                 st.write("추천 도서 목록:")
                 for book in selected_books:
-                    st.write(f"- **{book['bookname']}**")
-                    st.write(f"  저자: {book['authors']}, 출판사: {book['publisher']}, 출판년도: {book['publication_year']}")
+                    st.markdown(f"< {book['bookname']} >")
+                    st.markdown(f"  - 🧑‍💻저자🧑‍💻: {book['authors']}  \n"  # 줄바꿈은 `\n` 대신 `Markdown`에서 `  \n` 사용
+                            f"  -🏢출판사🏢: {book['publisher']}  \n"
+                            f"  - ⏳출판년도⌛️: {book['publication_year']}")
                     st.image(book.get("bookImageURL", ""), width=100)  # 책 이미지 출력
                     st.write(f"[상세 페이지]({book['bookDtlUrl']})")
                     st.markdown("---")
