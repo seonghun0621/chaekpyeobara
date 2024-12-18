@@ -433,11 +433,13 @@ def fetch_books(api_key, gender, age, region, major_topic):
 #추천도서 랜덤 3권 선택
 def recommend_books(books):
     if len(books) == 0:
-        st.warning("조건에 맞는 도서를 찾지 못했습니다.")
+        st.warning("조건에 맞는 도서를 찾을 수 없습니다.")
         return []
 
     # 랜덤으로 3권 선택
-    return random.sample(books, min(3, len(books)))
+    selected_books = random.sample(books, min(3, len(books)))
+    st.write("추천 도서:", selected_books)  # 선택된 도서 출력
+    return selected_books
 
 def generate_recommendation_reason(selected_books):
     titles = ", ".join([book["bookname"] for book in selected_books])
