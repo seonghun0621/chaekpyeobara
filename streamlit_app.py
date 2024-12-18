@@ -13,17 +13,7 @@ import re
 import json
 import openai
 from datetime import datetime
-import chromadb
-from chromadb.config import Settings
-
-# ChromaDB 클라이언트 초기화
-chroma_client = chromadb.Client(Settings(
-    persist_directory="./chroma",  # 데이터 저장 경로
-    chroma_db_impl="duckdb+parquet"  # 저장 방식
-))
-
-# 새 컬렉션 생성
-collection = chroma_client.get_or_create_collection("book_recommendations")
+import random
     
 # 알라딘 API 인증키
 TTB_KEY = "ttbtmdwn021442001"
@@ -395,131 +385,79 @@ with tab3:
                 st.error(f"오류 발생: {e}")
 
 
-#API 정보 Chroma DB에 저장
-def fetch_and_store_books(region, start_date, end_date):
+
+
+# 탭 4 - 책 추천받기
+with tab4:
+    st.subheader("🦫 책펴바라에게 책 추천받기 📖")
+
+#사용자 입력받기
+gender = st.selectbox("성별을 선택하세요", ["남성", "여성", "미상"])
+age = st.selectbox("나이를 선택하세요", ["영유아", "유아", "초등", "청소년", "20대", "30대", "40대", "50대", "60세 이상", "미상"])
+major_topic = st.selectbox("관심 대주제를 선택하세요", ["총류", "철학", "종교", "사회과학", "자연과학", "기술과학", "예술", "언어", "문학", "역사"])
+minor_topic = st.text_input("관심 세부주제를 입력하세요 (선택사항)")
+
+# 코드 매핑
+gender_map = {"남성": 0, "여성": 1, "미상": 2}
+age_map = {
+    "영유아": 0, "유아": 6, "초등": 8, "청소년": 14, 
+    "20대": 20, "30대": 30, "40대": 40, 
+    "50대": 50, "60세 이상": 60, "미상": -1
+}
+major_topic_map = {
+    "총류": 0, "철학": 1, "종교": 2, "사회과학": 3, "자연과학": 4, 
+    "기술과학": 5, "예술": 6, "언어": 7, "문학": 8, "역사": 9
+}
+
+# 변환
+selected_gender = gender_map[gender]
+selected_age = age_map[age]
+selected_major_topic = major_topic_map[major_topic]
+
+#API 호출
+def fetch_books(api_key, gender, age, region, major_topic, minor_topic):
     url = "http://data4library.kr/api/loanItemSrchByLib"
     params = {
-        "authKey": API_KEY,
-        "region": region,
-        "startDt": start_date,
-        "endDt": end_date,
+        "authKey": LIB_KEY,
+        "gender": gender,
+        "age": age,
+        "kdc": major_topic,
+        "dtl_kdc": minor_topic,  # 세부 주제도 선택 사항
         "format": "json",
         "pageSize": 100
     }
 
     response = requests.get(url, params=params)
     if response.status_code == 200:
-        data = response.json()
-        if "docs" in data:
-            for book in data["docs"]:
-                title = book['bookname']
-                authors = book['authors']
-                genre = book.get("class_nm", "기타")  # API 데이터에서 장르 정보
-                gender = book.get("gender", "남성, 여성")
-                age = book.get("age", "10,20,30")
-                region = region
-                
-                # ChromaDB에 데이터 추가
-                collection.add(
-                    documents=[{
-                        "title": title,
-                        "authors": authors,
-                        "genre": genre,
-                        "gender": gender,
-                        "age": age,
-                        "region": region
-                    }],
-                    ids=[f"{title}_{region}"]
-                )
-            return True
-    return False
-        
-# 책 추천 함수
-def get_recommended_books(user_info, num_books=5):
-    query = f"{user_info['gender']}, {user_info['age']}세"
-    if user_info['region'] != "전체":
-        query += f", {user_info['region']}"
-    
-    # ChromaDB에서 데이터 검색
-    try:
-        results = collection.query(
-            query_texts=[query],
-            n_results=50  # 넉넉히 검색한 뒤 랜덤 추출
-        )
-        books = results["documents"]
-
-        # 장르 필터링
-        if user_info['genres']:
-            books = [book for book in books if book.get("genre") in user_info['genres']]
-
-        # 랜덤으로 추천할 책 선택
-        if len(books) > num_books:
-            books = random.sample(books, num_books)
-
-        return books
-    except Exception as e:
-        print(f"Error during query: {e}")
+        return response.json().get("docs", [])
+    else:
+        st.error("API 호출에 실패했습니다.")
         return []
 
-# 추천 이유 설명 함수
-def generate_recommendation_reason(books, user_info):
-    book_titles = [book["title"] for book in books]
-    prompt = f"""
-    사용자가 입력한 조건:
-    - 성별: {user_info['gender']}
-    - 나이: {user_info['age']}
-    - 지역: {user_info['region']}
-    - 관심 장르: {', '.join(user_info['genres'])}
 
-    추천 도서 목록:
-    {', '.join(book_titles)}
+#도서추천, 출력
+def recommend_books(books, api_key):
+    if len(books) == 0:
+        st.warning("조건에 맞는 도서를 찾지 못했습니다.")
+        return
 
-    각 도서를 추천한 이유를 설명해주세요.
-    """
+    # 랜덤으로 3권 선택
+    selected_books = random.sample(books, min(3, len(books)))
+
+    # 도서 목록 출력
+    for book in selected_books:
+        st.write(f"**{book['bookname']}**")
+        st.write(f"저자: {book['authors']}, 출판사: {book['publisher']}, 출판년도: {book['publication_year']}")
+        st.write(f"[도서 상세 페이지]({book['bookDtlUrl']})")
+        st.markdown("---")
+
+    # 추천 이유 생성 (LLM 활용)
+    titles = ", ".join([book["bookname"] for book in selected_books])
+    prompt = f"사용자가 선택한 조건에 맞는 도서 '{titles}'를 추천합니다. 각 도서가 왜 추천되었는지 설명해주세요."
     response = openai.Completion.create(
         model="text-davinci-003",
         prompt=prompt,
         max_tokens=300
     )
-    return response["choices"][0]["text"]
-
-# 탭 4 - 책 추천받기
-with tab4:
-    st.subheader("🦫 책펴바라에게 책 추천받기 📖")
-
-    # 사용자 입력
-    user_gender = st.selectbox(
-        "성별을 선택하세요:",
-        ["남성", "여성", "밝히고 싶지 않음"]
-    )
-    user_age = st.slider("나이를 선택하세요:", 10, 80, 30)
-    user_region = st.text_input("지역을 입력하세요 (선택 사항):", value="")  # 지역 입력은 선택 사항
-    user_genre = st.multiselect(
-        "관심 있는 장르를 선택하세요 (여러 개 선택 가능):",
-        ["문학", "역사", "과학", "예술", "자기계발", "여행", "철학", "종교"]
-    )
-
-    if st.button("추천받기"):
-        with st.spinner("추천 도서를 검색 중입니다..."):
-            # 지역 입력이 없으면 모든 지역 포함
-            region = user_region if user_region else "전체"
-            user_info = {
-                "gender": user_gender,
-                "age": user_age,
-                "region": region,
-                "genres": user_genre
-            }
-
-            # 추천 로직 호출
-            books = get_recommended_books(user_info)
-            if books:
-                st.subheader("추천 도서 목록:")
-                for book in books:
-                    st.write(f"**{book['title']}** - {book['authors']}")
-                
-                # 추천 이유 생성
-                reasons = generate_recommendation_reason(books, user_info)
-                st.subheader("추천 이유:")
-                st.write(reasons)
-            else:
-                st.warning("조건에 맞는 추천 도서를 찾지 못했습니다.")
+    st.write("**추천 이유:**")
+    st.write(response.choices[0].text.strip())
