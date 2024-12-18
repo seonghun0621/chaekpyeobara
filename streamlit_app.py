@@ -410,6 +410,8 @@ def fetch_and_store_books(region, start_date, end_date):
                 gender = book.get("gender", "남성, 여성")  # API 데이터에서 추출 가능 시 사용
                 age = book.get("age", "10,20,30")  # 가정: API에서 나이대 정보를 제공
                 region = region  # 지역 코드
+
+                # Store book data in Chroma DB
                 collection.add(
                     documents=[{
                         "title": title,
@@ -418,11 +420,21 @@ def fetch_and_store_books(region, start_date, end_date):
                         "age": age,
                         "region": region
                     }],
-                    ids=[f"{title}_{region}"]
+                    ids=[title],  # Unique identifier for the book (book title)
+                    metadatas=[{
+                        "authors": authors,
+                        "gender": gender,
+                        "age": age,
+                        "region": region
+                    }],
+                    embeddings=None  # If you plan to use embeddings for similarity, add them here
                 )
-            return True
-    return False
-
+                st.write(f"Book added to Chroma DB: {title}")
+        else:
+            st.write("No books found for the given parameters.")
+    else:
+        st.write(f"API request failed with status code: {response.status_code}")
+        
 # 책 추천 함수
 def get_recommended_books(gender, age, region, num_books=5):
     query = f"{gender}, {age}세, {region}"  # 검색 조건
