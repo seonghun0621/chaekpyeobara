@@ -441,7 +441,6 @@ def recommend_books(books):
 
     # 랜덤으로 3권 선택
     selected_books = random.sample(books, min(3, len(books)))
-    st.write("추천된 도서:", selected_books)  # 디버깅용 데이터 출력
     return selected_books
 
 def generate_recommendation_reason(selected_books):
