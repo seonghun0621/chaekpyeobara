@@ -395,36 +395,28 @@ with tab4:
 gender = st.selectbox("성별을 선택하세요", ["남성", "여성", "미상"])
 age = st.selectbox("나이를 선택하세요", ["영유아", "유아", "초등", "청소년", "20대", "30대", "40대", "50대", "60세 이상", "미상"])
 major_topic = st.selectbox("관심 대주제를 선택하세요", ["총류", "철학", "종교", "사회과학", "자연과학", "기술과학", "예술", "언어", "문학", "역사"])
-
-if st.button("책 추천받기"):
-    st.write(f"선택한 성별: {gender}")
-    st.write(f"선택한 나이: {age}")
-    st.write(f"선택한 대주제: {major_topic}")
+region = st.selectbox("지역을 선택하세요", ["서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"])
 
 # 코드 매핑
 gender_map = {"남성": 0, "여성": 1, "미상": 2}
-age_map = {
-    "영유아": 0, "유아": 6, "초등": 8, "청소년": 14, 
-    "20대": 20, "30대": 30, "40대": 40, 
-    "50대": 50, "60세 이상": 60, "미상": -1
-}
-major_topic_map = {
-    "총류": 0, "철학": 1, "종교": 2, "사회과학": 3, "자연과학": 4, 
-    "기술과학": 5, "예술": 6, "언어": 7, "문학": 8, "역사": 9
-}
+age_map = {"영유아": 0, "유아": 6, "초등": 8, "청소년": 14, "20대": 20, "30대": 30, "40대": 40, "50대": 50, "60세 이상": 60, "미상": -1}
+major_topic_map = {"총류": 0, "철학": 1, "종교": 2, "사회과학": 3, "자연과학": 4, "기술과학": 5, "예술": 6, "언어": 7, "문학": 8, "역사": 9}
+region_map = {"서울": 11, "부산": 21, "대구": 22, "인천": 23, "광주": 24, "대전": 25, "울산": 26, "세종": 29, "경기": 31, "강원": 32, "충북": 33, "충남": 34, "전북": 35, "전남": 36, "경북": 37, "경남": 38, "제주": 39}
 
 # 변환
 selected_gender = gender_map[gender]
 selected_age = age_map[age]
 selected_major_topic = major_topic_map[major_topic]
+selected_region = region_map[region]
 
 #API 호출
-def fetch_books(api_key, gender, age, region, major_topic, minor_topic):
+def fetch_books(api_key, gender, age, region, major_topic):
     url = "http://data4library.kr/api/loanItemSrchByLib"
     params = {
         "authKey": LIB_KEY,
         "gender": gender,
         "age": age,
+        "region": region,
         "kdc": major_topic,
         "format": "json",
         "pageSize": 100
@@ -434,33 +426,48 @@ def fetch_books(api_key, gender, age, region, major_topic, minor_topic):
     if response.status_code == 200:
         return response.json().get("docs", [])
     else:
-        st.error("API 호출에 실패했습니다.")
+        st.error(f"API 호출 실패: {response.status_code}")
         return []
 
-
-#도서추천, 출력
-def recommend_books(books, api_key):
+#추천도서 랜덤 3권 선택
+def recommend_books(books):
     if len(books) == 0:
         st.warning("조건에 맞는 도서를 찾지 못했습니다.")
-        return
+        return []
 
     # 랜덤으로 3권 선택
-    selected_books = random.sample(books, min(3, len(books)))
+    return random.sample(books, min(3, len(books)))
 
-    # 도서 목록 출력
-    for book in selected_books:
-        st.write(f"**{book['bookname']}**")
-        st.write(f"저자: {book['authors']}, 출판사: {book['publisher']}, 출판년도: {book['publication_year']}")
-        st.write(f"[도서 상세 페이지]({book['bookDtlUrl']})")
-        st.markdown("---")
-
-    # 추천 이유 생성 (LLM 활용)
+def generate_recommendation_reason(selected_books):
     titles = ", ".join([book["bookname"] for book in selected_books])
-    prompt = f"사용자가 선택한 조건에 맞는 도서 '{titles}'를 추천합니다. 각 도서가 왜 추천되었는지 설명해주세요."
+    prompt = f"""
+    사용자가 선택한 조건에 맞는 도서 '{titles}'를 추천합니다.
+    각 도서가 왜 추천되었는지 간단히 설명해주세요.
+    """
     response = openai.Completion.create(
         model="text-davinci-003",
         prompt=prompt,
         max_tokens=300
     )
-    st.write("**추천 이유:**")
-    st.write(response.choices[0].text.strip())
+    return response.choices[0].text.strip()
+
+if st.button("책 추천받기"):
+    # API 호출
+    books = fetch_books("LIB_KEY", selected_gender, selected_age, selected_region, selected_major_topic)
+
+    # 추천 도서 선택
+    selected_books = recommend_books(books)
+
+    # 추천 도서 출력
+    if selected_books:
+        st.write("추천 도서 목록:")
+        for book in selected_books:
+            st.write(f"- **{book['bookname']}**")
+            st.write(f"  저자: {book['authors']}, 출판사: {book['publisher']}, 출판년도: {book['publication_year']}")
+            st.write(f"[상세 페이지]({book['bookDtlUrl']})")
+            st.markdown("---")
+
+        # 추천 이유 생성
+        reason = generate_recommendation_reason(selected_books)
+        st.write("**추천 이유:**")
+        st.write(reason)
