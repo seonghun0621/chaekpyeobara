@@ -335,9 +335,10 @@ def chat_with_gpt(book_title, user_feedback):
     return response.choices[0].text.strip()
 
 import openai
-api_key = st.secrets["general"]["open_api_key"]
-import open_api_key from "../../apikey.js"
-open_api_key = open_api_key
+with open("apikey.json", "r") as file:
+    api_keys = json.load(file)
+
+open_api_key = api_keys.get("open_api_key")
     
 # 탭 3 - 알라딘 API와 ChatGPT 통합
 with tab3:
