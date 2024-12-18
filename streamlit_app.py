@@ -13,6 +13,17 @@ import re
 import json
 import openai
 from datetime import datetime
+import chromadb
+from chromadb.config import Settings
+
+# ChromaDB 클라이언트 초기화
+chroma_client = chromadb.Client(Settings(
+    persist_directory="./chroma",  # 데이터 저장 경로
+    chroma_db_impl="duckdb+parquet"  # 저장 방식
+))
+
+# 새 컬렉션 생성
+collection = chroma_client.get_or_create_collection("book_recommendations")
     
 # 알라딘 API 인증키
 TTB_KEY = "ttbtmdwn021442001"
@@ -383,17 +394,19 @@ with tab3:
             except Exception as e:
                 st.error(f"오류 발생: {e}")
 
+
 #API 정보 Chroma DB에 저장
 def fetch_and_store_books(region, start_date, end_date):
     url = "http://data4library.kr/api/loanItemSrchByLib"
     params = {
-        "authKey": LIB_KEY,
+        "authKey": API_KEY,
         "region": region,
         "startDt": start_date,
         "endDt": end_date,
         "format": "json",
-        "pageSize": 100  # 한 번에 최대 100권 가져오기
+        "pageSize": 100
     }
+
     response = requests.get(url, params=params)
     if response.status_code == 200:
         data = response.json()
@@ -401,46 +414,48 @@ def fetch_and_store_books(region, start_date, end_date):
             for book in data["docs"]:
                 title = book['bookname']
                 authors = book['authors']
-                gender = book.get("gender", "남성, 여성")  # API 데이터에서 추출 가능 시 사용
-                age = book.get("age", "10,20,30")  # 가정: API에서 나이대 정보를 제공
-                region = region  # 지역 코드
-
-                # Store book data in Chroma DB
+                genre = book.get("class_nm", "기타")  # API 데이터에서 장르 정보
+                gender = book.get("gender", "남성, 여성")
+                age = book.get("age", "10,20,30")
+                region = region
+                
+                # ChromaDB에 데이터 추가
                 collection.add(
                     documents=[{
                         "title": title,
                         "authors": authors,
+                        "genre": genre,
                         "gender": gender,
                         "age": age,
                         "region": region
                     }],
-                    ids=[title],  # Unique identifier for the book (book title)
-                    metadatas=[{
-                        "authors": authors,
-                        "gender": gender,
-                        "age": age,
-                        "region": region
-                    }],
-                    embeddings=None  # If you plan to use embeddings for similarity, add them here
+                    ids=[f"{title}_{region}"]
                 )
-                st.write(f"Book added to Chroma DB: {title}")
-        else:
-            st.write("No books found for the given parameters.")
-    else:
-        st.write(f"API request failed with status code: {response.status_code}")
+            return True
+    return False
         
 # 책 추천 함수
-def get_recommended_books(gender, age, region, num_books=5):
-    query = f"{gender}, {age}세, {region}"  # 검색 조건
+def get_recommended_books(user_info, num_books=5):
+    query = f"{user_info['gender']}, {user_info['age']}세"
+    if user_info['region'] != "전체":
+        query += f", {user_info['region']}"
+    
+    # ChromaDB에서 데이터 검색
     try:
-        # Chroma DB에서 조건에 맞는 데이터 검색
         results = collection.query(
             query_texts=[query],
-            n_results=50  # 넉넉히 검색해둔 뒤 랜덤 추출
+            n_results=50  # 넉넉히 검색한 뒤 랜덤 추출
         )
         books = results["documents"]
+
+        # 장르 필터링
+        if user_info['genres']:
+            books = [book for book in books if book.get("genre") in user_info['genres']]
+
+        # 랜덤으로 추천할 책 선택
         if len(books) > num_books:
-            books = random.sample(books, num_books)  # 랜덤으로 선택
+            books = random.sample(books, num_books)
+
         return books
     except Exception as e:
         print(f"Error during query: {e}")
@@ -454,11 +469,12 @@ def generate_recommendation_reason(books, user_info):
     - 성별: {user_info['gender']}
     - 나이: {user_info['age']}
     - 지역: {user_info['region']}
-    
+    - 관심 장르: {', '.join(user_info['genres'])}
+
     추천 도서 목록:
     {', '.join(book_titles)}
 
-    각 도서를 추천한 이유를 설명해 주세요.
+    각 도서를 추천한 이유를 설명해주세요.
     """
     response = openai.Completion.create(
         model="text-davinci-003",
