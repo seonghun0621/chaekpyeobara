@@ -3,3 +3,4 @@ openai==0.28
 python-dotenv
 chromadb==0.1.0
 sentence-transformers
+torch 
