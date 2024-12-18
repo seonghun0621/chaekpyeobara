@@ -172,7 +172,7 @@ with tab1:
                 st.session_state.remaining_days = target_days
                 st.session_state.daily_goal = daily_pages
 
-            # 현재 상태 표시
+            # 상태 표시
             st.write(f"남은 페이지: {st.session_state.remaining_pages}쪽")
             st.write(f"하루 목표 페이지: {st.session_state.daily_goal}쪽")
             st.write(f"남은 목표 일수: {st.session_state.remaining_days}일")
@@ -184,6 +184,7 @@ with tab1:
                 min_value=0,
                 max_value=st.session_state.remaining_pages,
                 key=key,
+                value=st.session_state.get(f"pages_read_{key}", 0),
             )
 
             # 진행 업데이트 버튼
@@ -200,8 +201,10 @@ with tab1:
                         st.session_state.remaining_days,
                     )
 
+                    st.session_state[f"pages_read_{key}"] = pages_read_today  # 읽은 페이지 저장
+
                     if st.session_state.remaining_pages == 0:
-                        st.write("우와~! 🦦 책을 다 읽었어요! 🎉")
+                        st.success("우와~! 🦦 책을 다 읽었어요! 🎉")
                         save_goal(
                             book_info["title"],
                             target_days,
@@ -211,10 +214,11 @@ with tab1:
                         give_challenge(book_info["title"])
                     else:
                         st.write(f"남은 페이지: {st.session_state.remaining_pages}쪽")
-                        st.write(
-                            f"내일부터 하루 목표는 {st.session_state.daily_goal}쪽입니다."
-                        )
+                        st.write(f"내일부터 하루 목표는 {st.session_state.daily_goal}쪽입니다.")
                         st.write(f"남은 목표 일수: {st.session_state.remaining_days}일")
+                else:
+                    st.warning("읽은 페이지 수를 입력해주세요!")
+
         else:
             st.write("목표 읽기 기간을 입력해 주세요!")
 
@@ -231,7 +235,6 @@ with tab1:
                 st.write("---")
         else:
             st.write("저장된 목표가 없습니다.")
-
             
 # 목표 불러오기
 goals = load_goals()  # 여기에 목표를 불러오는 코드가 필요
