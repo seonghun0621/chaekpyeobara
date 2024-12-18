@@ -395,7 +395,11 @@ with tab4:
 gender = st.selectbox("성별을 선택하세요", ["남성", "여성", "미상"])
 age = st.selectbox("나이를 선택하세요", ["영유아", "유아", "초등", "청소년", "20대", "30대", "40대", "50대", "60세 이상", "미상"])
 major_topic = st.selectbox("관심 대주제를 선택하세요", ["총류", "철학", "종교", "사회과학", "자연과학", "기술과학", "예술", "언어", "문학", "역사"])
-minor_topic = st.text_input("관심 세부주제를 입력하세요 (선택사항)")
+
+if st.button("책 추천받기"):
+    st.write(f"선택한 성별: {gender}")
+    st.write(f"선택한 나이: {age}")
+    st.write(f"선택한 대주제: {major_topic}")
 
 # 코드 매핑
 gender_map = {"남성": 0, "여성": 1, "미상": 2}
@@ -422,7 +426,6 @@ def fetch_books(api_key, gender, age, region, major_topic, minor_topic):
         "gender": gender,
         "age": age,
         "kdc": major_topic,
-        "dtl_kdc": minor_topic,  # 세부 주제도 선택 사항
         "format": "json",
         "pageSize": 100
     }
