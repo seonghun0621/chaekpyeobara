@@ -1,5 +1,4 @@
 openai
 openai==0.28
 python-dotenv
-sqlite3
 chromadb
