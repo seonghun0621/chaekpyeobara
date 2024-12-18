@@ -21,7 +21,7 @@ TTB_KEY = "ttbtmdwn021442001"
 
 #도서관 정보나루 API 인증키
 LIB_KEY = "661a88b506497d2578c01548eb504b824b8fe475c0d9a08379b712caf9577067"
-
+'''
 # Chroma DB 설정
 import os
 persist_directory = "./chroma"
@@ -31,7 +31,7 @@ chroma_client = chromadb.Client(Settings(
     chroma_db_impl="duckdb+parquet"
 ))
 collection = chroma_client.get_or_create_collection("book_recommendations")
-
+'''
 # 책 검색 함수
 def search_book(book_title):
     search_url = "http://www.aladin.co.kr/ttb/api/ItemSearch.aspx"
