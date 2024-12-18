@@ -13,7 +13,7 @@ import re
 import json
 import openai
 #import chromadb
-from chromadb.config import Settings
+#from chromadb.config import Settings
 from datetime import datetime
     
 # 알라딘 API 인증키
