@@ -141,6 +141,8 @@ st.title("책펴바라 숲속 도서관에 오신 것을 환영합니다! 🦦�
 
 tab1, tab2, tab3, tab4 = st.tabs(["책 검색 및 목표 설정", "독서 감상문 쓰기", "독서 감상 주고받기", "책 추천받기"])
 
+import time
+
 with tab1:
     book_title = st.text_input("검색할 책 제목을 입력하세요:")
 
@@ -172,8 +174,8 @@ with tab1:
 
             # 반복문으로 책을 다 읽을 때까지 진행
             while remaining_pages > 0:
-                # 고유한 key 생성: 페이지 수와 남은 일수를 고유하게 결합하여 사용
-                key = f"pages_read_{remaining_pages}_{remaining_days}"
+                # 고유한 key 생성: time 값을 추가하여 고유한 key를 생성
+                key = f"pages_read_{remaining_pages}_{remaining_days}_{int(time.time())}"
                 pages_read_today = st.number_input(
                     f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", 
                     min_value=0, 
