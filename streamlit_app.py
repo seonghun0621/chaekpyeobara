@@ -12,8 +12,8 @@ import requests
 import re
 import json
 import openai
-#import chromadb
-#from chromadb.config import Settings
+import chromadb
+from chromadb.config import Settings
 from datetime import datetime
     
 # 알라딘 API 인증키
@@ -21,7 +21,7 @@ TTB_KEY = "ttbtmdwn021442001"
 
 #도서관 정보나루 API 인증키
 LIB_KEY = "661a88b506497d2578c01548eb504b824b8fe475c0d9a08379b712caf9577067"
-'''
+
 # Chroma DB 설정
 import os
 persist_directory = "./chroma"
@@ -31,7 +31,7 @@ chroma_client = chromadb.Client(Settings(
     chroma_db_impl="duckdb+parquet"
 ))
 collection = chroma_client.get_or_create_collection("book_recommendations")
-'''
+
 # 책 검색 함수
 def search_book(book_title):
     search_url = "http://www.aladin.co.kr/ttb/api/ItemSearch.aspx"
@@ -388,7 +388,7 @@ with tab3:
 
             except Exception as e:
                 st.error(f"오류 발생: {e}")
-'''
+
 #API 정보 Chroma DB에 저장
 def fetch_and_store_books(region, start_date, end_date):
     url = "http://data4library.kr/api/loanItemSrchByLib"
@@ -502,4 +502,4 @@ with tab4:
                 st.write(reasons)
             else:
                 st.warning("조건에 맞는 추천 도서를 찾지 못했습니다.")
-'''
+
