@@ -13,6 +13,7 @@ import re
 import json
 import openai
 import chromadb
+from chromadb import Client
 from chromadb.config import Settings
 from datetime import datetime
     
