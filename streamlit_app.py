@@ -388,7 +388,7 @@ with tab3:
 
             except Exception as e:
                 st.error(f"오류 발생: {e}")
-
+'''
 #API 정보 Chroma DB에 저장
 def fetch_and_store_books(region, start_date, end_date):
     url = "http://data4library.kr/api/loanItemSrchByLib"
@@ -502,3 +502,4 @@ with tab4:
                 st.write(reasons)
             else:
                 st.warning("조건에 맞는 추천 도서를 찾지 못했습니다.")
+'''
