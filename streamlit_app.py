@@ -12,7 +12,7 @@ import requests
 import re
 import json
 import openai
-import chromadb
+#import chromadb
 from chromadb.config import Settings
 from datetime import datetime
     
