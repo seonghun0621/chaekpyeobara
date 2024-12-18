@@ -17,6 +17,3 @@ jobs:
         pip install -r requirements.txt
 
 
-git add .github/workflows/main.yml requirements.txt
-git commit -m "Add Python 3.10 setup workflow"
-git push
