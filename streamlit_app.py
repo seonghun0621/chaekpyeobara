@@ -180,7 +180,6 @@ with tab1:
                     f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", 
                     min_value=0, 
                     max_value=remaining_pages,
-                    key=key
                 )
 
                 if pages_read_today > 0:
