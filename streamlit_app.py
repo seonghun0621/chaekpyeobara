@@ -172,11 +172,13 @@ with tab1:
 
             # 반복문으로 책을 다 읽을 때까지 진행
             while remaining_pages > 0:
+                # 고유한 key 생성: 페이지 수와 남은 일수를 고유하게 결합하여 사용
+                key = f"pages_read_{remaining_pages}_{remaining_days}"
                 pages_read_today = st.number_input(
                     f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", 
                     min_value=0, 
                     max_value=remaining_pages,
-                    key=f"pages_read_{remaining_pages}_{remaining_days}"
+                    key=key
                 )
 
                 if pages_read_today > 0:
