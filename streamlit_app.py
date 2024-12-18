@@ -166,33 +166,55 @@ with tab1:
                 st.write(f"마지막 날 추가로 읽어야 할 페이지: **{remaining_pages}쪽**")
             st.write("오늘부터 시작해볼까요?")
 
-            total_pages = int(book_info["page_count"])
-            remaining_pages = total_pages
-            remaining_days = target_days
+            # 상태 초기화
+            if "remaining_pages" not in st.session_state:
+                st.session_state.remaining_pages = int(book_info["page_count"])
+                st.session_state.remaining_days = target_days
+                st.session_state.daily_goal = daily_pages
 
-            # 반복문으로 책을 다 읽을 때까지 진행
-            while remaining_pages > 0:
-                # 고유한 key 생성: time 값을 추가하여 고유한 key를 생성
-                key = f"pages_read_{remaining_pages}_{remaining_days}_{int(time.time())}"
-                pages_read_today = st.number_input(
-                    f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", 
-                    min_value=0, 
-                    max_value=remaining_pages,
-                    key=key
-                )
+            # 현재 상태 표시
+            st.write(f"남은 페이지: {st.session_state.remaining_pages}쪽")
+            st.write(f"하루 목표 페이지: {st.session_state.daily_goal}쪽")
+            st.write(f"남은 목표 일수: {st.session_state.remaining_days}일")
 
+            # 오늘 읽은 페이지 수 입력
+            key = f"pages_read_{int(time.time())}"  # 고유한 key 생성
+            pages_read_today = st.number_input(
+                f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {st.session_state.remaining_pages}):",
+                min_value=0,
+                max_value=st.session_state.remaining_pages,
+                key=key,
+            )
+
+            # 진행 업데이트 버튼
+            if st.button("진행 업데이트"):
                 if pages_read_today > 0:
-                    remaining_pages, new_daily_goal, remaining_days, status = recalculate_goal_dynamic(remaining_pages, pages_read_today, remaining_days)
+                    (
+                        st.session_state.remaining_pages,
+                        st.session_state.daily_goal,
+                        st.session_state.remaining_days,
+                        status,
+                    ) = recalculate_goal_dynamic(
+                        st.session_state.remaining_pages,
+                        pages_read_today,
+                        st.session_state.remaining_days,
+                    )
 
-                    if remaining_pages == 0:
+                    if st.session_state.remaining_pages == 0:
                         st.write("우와~! 🦦 책을 다 읽었어요! 🎉")
-                        save_goal(book_info['title'], target_days, daily_pages, remaining_pages)
-                        give_challenge(book_info['title'])
-                        break
+                        save_goal(
+                            book_info["title"],
+                            target_days,
+                            daily_pages,
+                            st.session_state.remaining_pages,
+                        )
+                        give_challenge(book_info["title"])
                     else:
-                        st.write(f"남은 페이지: {remaining_pages}쪽")
-                        st.write(f"내일부터 하루 목표는 {new_daily_goal}쪽입니다.")
-                        st.write(f"남은 목표 일수: {remaining_days}일")
+                        st.write(f"남은 페이지: {st.session_state.remaining_pages}쪽")
+                        st.write(
+                            f"내일부터 하루 목표는 {st.session_state.daily_goal}쪽입니다."
+                        )
+                        st.write(f"남은 목표 일수: {st.session_state.remaining_days}일")
         else:
             st.write("목표 읽기 기간을 입력해 주세요!")
 
@@ -209,6 +231,7 @@ with tab1:
                 st.write("---")
         else:
             st.write("저장된 목표가 없습니다.")
+
             
 # 목표 불러오기
 goals = load_goals()  # 여기에 목표를 불러오는 코드가 필요
