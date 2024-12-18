@@ -171,6 +171,7 @@ with tab1:
                 st.session_state.remaining_pages = int(book_info["page_count"])
                 st.session_state.remaining_days = target_days
                 st.session_state.daily_goal = daily_pages
+                st.session_state.pages_read_today = 0  # 초기값 설정
 
             # 상태 표시
             st.write(f"남은 페이지: {st.session_state.remaining_pages}쪽")
@@ -178,12 +179,11 @@ with tab1:
             st.write(f"남은 목표 일수: {st.session_state.remaining_days}일")
 
             # 오늘 읽은 페이지 수 입력
-            key = f"pages_read_{int(time.time())}"  # 고유한 key 생성
             pages_read_today = st.number_input(
                 f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {st.session_state.remaining_pages}):",
                 min_value=0,
                 max_value=st.session_state.remaining_pages,
-                key=key,
+                key="pages_read_today",  # 고정된 키 사용
             )
 
             # 디버깅용 로그
