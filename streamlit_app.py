@@ -450,30 +450,29 @@ with tab4:
         각 도서가 왜 추천되었는지 간단히 설명해주세요.
         """
         response = openai.Completion.create(
-            model="text-davinci-003",
+            model="gpt-3.5-turbo",
             prompt=prompt,
             max_tokens=300
         )
         return response.choices[0].text.strip()
     
     def generate_recommendation_reason(selected_books):
-        # 추천된 책 제목들만 추출
         titles = ", ".join([book["bookname"] for book in selected_books])
         prompt = f"""
         다음 도서들을 사용자가 선택한 조건에 따라 추천합니다:
         '{titles}'.
         각 도서가 왜 추천되었는지 간단히 설명해주세요.
         """
-        
-        # LLM 호출
-        response = openai.Completion.create(
-            model="text-davinci-003",  # 사용할 모델
-            prompt=prompt,
-            max_tokens=300
-        )
-        
-        # LLM의 응답 내용 반환
-        return response.choices[0].text.strip()
+        try:
+            response = openai.Completion.create(
+                model="gpt-3.5-turbo",  # 올바른 모델 이름 사용
+                prompt=prompt,
+                max_tokens=300
+            )
+            return response.choices[0].text.strip()
+        except openai.error.OpenAIError as e:
+            st.error(f"OpenAI API 호출 중 오류가 발생했습니다: {str(e)}")
+            return "추천 이유를 생성하는 데 실패했습니다."
     
     if st.button("책 추천받기"):
         # API 호출
