@@ -418,21 +418,14 @@ def fetch_books(api_key, gender, age, region, major_topic):
         "region": region,
         "kdc": major_topic,
         "format": "json",
-        "pageSize": 100
+        "pageSize": 10
     }
 
     response = requests.get(url, params=params)
     if response.status_code == 200:
         data = response.json()
-        docs = data.get("docs", [])  # `docs` 키를 가져옴
-        if not docs:
-            st.warning("API 응답 데이터에서 'docs'가 비어 있습니다.")
-            return []
-
-        # `docs` 내부의 각 항목에서 `doc` 추출
-        books = [item["doc"] for item in docs if "doc" in item]
-        st.write("추출된 도서 데이터:", books)  # 디버깅용 데이터 출력
-        return books
+        st.write("API 응답 전체 데이터:", data)  # 응답 전체를 출력
+        return data.get("docs", [])  # docs 키를 반환
     else:
         st.error(f"API 호출 실패: {response.status_code}")
         return []
