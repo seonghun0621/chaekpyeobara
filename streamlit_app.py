@@ -23,8 +23,11 @@ TTB_KEY = "ttbtmdwn021442001"
 LIB_KEY = "661a88b506497d2578c01548eb504b824b8fe475c0d9a08379b712caf9577067"
 
 # Chroma DB 설정
+import os
+persist_directory = "./chroma"
+os.makedirs(persist_directory, exist_ok=True)
 chroma_client = chromadb.Client(Settings(
-    persist_directory="./chroma", # 데이터 저장 경로
+    persist_directory=persist_directory,
     chroma_db_impl="duckdb+parquet"
 ))
 collection = chroma_client.get_or_create_collection("book_recommendations")
