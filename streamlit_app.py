@@ -338,7 +338,7 @@ def chat_with_gpt(book_title, user_feedback):
 
 import openai
 api_key = st.secrets["general"]["open_api_key"]
-openai.api_key = "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"
+openai.api_key = "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"
     
 # 탭 3 - 알라딘 API와 ChatGPT 통합
 with tab3:
@@ -471,20 +471,31 @@ def generate_recommendation_reason(books, user_info):
 with tab4:
     st.subheader("🦫 책펴바라에게 책 추천받기 📖")
 
-    #사용자 입력
-    user_gender = st.selectbox("성별을 선택하세요:", ["남성", "여성"])
-    user_age = st.slider("나이를 입력하세요:", 10, 80, 30)
-    user_region = st.text_input("지역을 입력하세요:")
+    # 사용자 입력
+    user_gender = st.selectbox(
+        "성별을 선택하세요:",
+        ["남성", "여성", "밝히고 싶지 않음"]
+    )
+    user_age = st.slider("나이를 선택하세요:", 10, 80, 30)
+    user_region = st.text_input("지역을 입력하세요 (선택 사항):", value="")  # 지역 입력은 선택 사항
+    user_genre = st.multiselect(
+        "관심 있는 장르를 선택하세요 (여러 개 선택 가능):",
+        ["문학", "역사", "과학", "예술", "자기계발", "여행", "철학", "종교"]
+    )
 
-    # 도서 추천 버튼
     if st.button("추천받기"):
         with st.spinner("추천 도서를 검색 중입니다..."):
+            # 지역 입력이 없으면 모든 지역 포함
+            region = user_region if user_region else "전체"
             user_info = {
                 "gender": user_gender,
                 "age": user_age,
-                "region": user_region
+                "region": region,
+                "genres": user_genre
             }
-            books = get_recommended_books(user_gender, user_age, user_region)
+
+            # 추천 로직 호출
+            books = get_recommended_books(user_info)
             if books:
                 st.subheader("추천 도서 목록:")
                 for book in books:
@@ -496,4 +507,3 @@ with tab4:
                 st.write(reasons)
             else:
                 st.warning("조건에 맞는 추천 도서를 찾지 못했습니다.")
-
