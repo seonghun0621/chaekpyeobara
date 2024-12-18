@@ -424,8 +424,13 @@ def fetch_books(api_key, gender, age, region, major_topic):
     response = requests.get(url, params=params)
     if response.status_code == 200:
         data = response.json()
-        st.write("API 응답 전체 데이터:", data)  # 응답 전체를 출력
-        return data.get("docs", [])  # docs 키를 반환
+        docs = data.get("response", {}).get("docs", [])  # `response` > `docs`
+        
+        # `docs` 리스트에서 `doc` 키 데이터를 추출
+        books = [item["doc"] for item in docs if "doc" in item]
+        
+        st.write("추출된 도서 데이터:", books)  # 디버깅용 데이터 출력
+        return books
     else:
         st.error(f"API 호출 실패: {response.status_code}")
         return []
@@ -438,7 +443,7 @@ def recommend_books(books):
 
     # 랜덤으로 3권 선택
     selected_books = random.sample(books, min(3, len(books)))
-    st.write("추천 도서:", selected_books)  # 선택된 도서 출력
+    st.write("추천된 도서:", selected_books)  # 디버깅용 데이터 출력
     return selected_books
 
 def generate_recommendation_reason(selected_books):
@@ -456,21 +461,21 @@ def generate_recommendation_reason(selected_books):
 
 if st.button("책 추천받기"):
     # API 호출
-    books = fetch_books("LIB_KEY", selected_gender, selected_age, selected_region, selected_major_topic)
+    books = fetch_books(LIB_KEY, selected_gender, selected_age, selected_region, selected_major_topic)
 
-    # 추천 도서 선택
-    selected_books = recommend_books(books)
+    if books:
+        # 추천 도서 선택
+        selected_books = recommend_books(books)
 
-    # 추천 도서 출력
-    if selected_books:
-        st.write("추천 도서 목록:")
-        for book in selected_books:
-            st.write(f"- **{book['bookname']}**")
-            st.write(f"  저자: {book['authors']}, 출판사: {book['publisher']}, 출판년도: {book['publication_year']}")
-            st.write(f"[상세 페이지]({book['bookDtlUrl']})")
-            st.markdown("---")
-
-        # 추천 이유 생성
-        reason = generate_recommendation_reason(selected_books)
-        st.write("**추천 이유:**")
-        st.write(reason)
+        if selected_books:
+            st.write("추천 도서 목록:")
+            for book in selected_books:
+                st.write(f"- **{book['bookname']}**")
+                st.write(f"  저자: {book['authors']}, 출판사: {book['publisher']}, 출판년도: {book['publication_year']}")
+                st.image(book.get("bookImageURL", ""), width=100)  # 책 이미지 출력
+                st.write(f"[상세 페이지]({book['bookDtlUrl']})")
+                st.markdown("---")
+        else:
+            st.warning("추천 도서가 없습니다.")
+    else:
+        st.warning("조건에 맞는 도서를 찾을 수 없습니다.")
