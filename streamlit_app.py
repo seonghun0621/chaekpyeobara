@@ -170,24 +170,27 @@ with tab1:
             remaining_pages = total_pages
             remaining_days = target_days
 
-            pages_read_today = st.number_input(
-                f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", 
-                min_value=0, 
-                max_value=remaining_pages,
-                key="pages_read_today"
-            )
+            # 반복문으로 책을 다 읽을 때까지 진행
+            while remaining_pages > 0:
+                pages_read_today = st.number_input(
+                    f"오늘 읽은 페이지 수를 입력해주세요 (남은 페이지: {remaining_pages}):", 
+                    min_value=0, 
+                    max_value=remaining_pages,
+                    key=f"pages_read_{remaining_pages}_{remaining_days}"
+                )
 
-            if pages_read_today:
-                remaining_pages, new_daily_goal, remaining_days, status = recalculate_goal_dynamic(remaining_pages, pages_read_today, remaining_days)
+                if pages_read_today > 0:
+                    remaining_pages, new_daily_goal, remaining_days, status = recalculate_goal_dynamic(remaining_pages, pages_read_today, remaining_days)
 
-                if remaining_pages == 0:
-                    st.write("우와~! 🦦 책을 다 읽었어요! 🎉")
-                    save_goal(book_info['title'], target_days, daily_pages, remaining_pages)
-                    give_challenge(book_info['title'])
-                else:
-                    st.write(f"남은 페이지: {remaining_pages}쪽")
-                    st.write(f"내일부터 하루 목표는 {new_daily_goal}쪽입니다.")
-                    st.write(f"남은 목표 일수: {remaining_days}일")
+                    if remaining_pages == 0:
+                        st.write("우와~! 🦦 책을 다 읽었어요! 🎉")
+                        save_goal(book_info['title'], target_days, daily_pages, remaining_pages)
+                        give_challenge(book_info['title'])
+                        break
+                    else:
+                        st.write(f"남은 페이지: {remaining_pages}쪽")
+                        st.write(f"내일부터 하루 목표는 {new_daily_goal}쪽입니다.")
+                        st.write(f"남은 목표 일수: {remaining_days}일")
         else:
             st.write("목표 읽기 기간을 입력해 주세요!")
 
